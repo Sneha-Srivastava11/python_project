@@ -88,3 +88,33 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.grid(True)
 plt.show()
+'''Objective 5->To compare the distribution of clinical test values and explore
+whether certain tests show more variability among patients.'''
+test_std = data[test_columns].std().sort_values(ascending=False)
+
+# Convert to a DataFrame for plotting
+std_df = test_std.reset_index()
+std_df.columns = ['Test', 'Standard Deviation']
+
+# Plot as bar chart
+plt.figure(figsize=(12, 6))
+sns.barplot(data=std_df, x='Test', y='Standard Deviation', hue='Test', palette='viridis', legend=False)
+plt.title('Variability of Clinical Test Results Among Patients')
+plt.ylabel('Standard Deviation')
+plt.xlabel('Clinical Test')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.grid(axis='y')
+plt.show()
+'''Objective 6->To understand the distribution of patients across different Hepatitis C disease stages or categories using a pie chart.'''
+category_counts = data['Category'].value_counts()
+
+# Plotting the pie chart
+plt.figure(figsize=(8, 8))
+plt.pie(category_counts, labels=category_counts.index, autopct='%1.1f%%', startangle=140, colors=plt.cm.Pastel1.colors)
+plt.title('Distribution of Patients Across Hepatitis C Stages')
+
+# Add legend (shows category names)
+plt.legend(category_counts.index, title="Disease Stage", loc="best")
+plt.axis('equal')  # To make the pie chart round
+plt.show()
