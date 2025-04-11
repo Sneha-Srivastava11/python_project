@@ -37,3 +37,54 @@ plt.ylabel('Average Test Value')
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+'''Objective 2->To compare blood test results between male and female patients and find out if gender has any effect on Hepatitis C.'''
+data = data.drop('Patient id', axis=1)
+
+# Separate male and female patients and get average test values
+grouped_by_sex = data.groupby('Sex').mean(numeric_only=True)
+
+# Plotting
+
+grouped_by_sex.T.plot(kind='bar',figsize=(10,6), colormap='Pastel1')
+plt.title('Average Test Values by Gender')
+plt.ylabel('Average Value')
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.legend(title='Sex', labels=['Female', 'Male'])
+plt.tight_layout()
+plt.show()
+'''Objective 3-> "To find out if any patients have test results that are much higher or lower than others,
+and understand what that might say about their health condition'''
+test_columns = ['ALB', 'ALP', 'ALT', 'AST', 'BIL', 'CHE', 'CHOL', 'CREA', 'GGT', 'PROT']
+
+# Plot boxplots for each test
+plt.figure(figsize=(15, 8))
+sns.boxplot(data=data[test_columns], orient='h', palette='Set2')
+plt.title("Boxplot of Test Results to Detect Outliers")
+plt.xlabel("Value")
+plt.tight_layout()
+plt.show()
+'''Objective 4->To analyze how average clinical test values vary across different age groups and investigate
+whether older patients are more likely to show signs of abnormal liver function based on routine blood test results'''
+# Assuming 'data' is your cleaned DataFrame
+bins = [0, 30, 50, 70, 100]
+labels = ['Young (<30)', 'Middle (30-50)', 'Senior (50-70)', 'Elderly (70+)']
+data['AgeGroup'] = pd.cut(data['Age'], bins=bins, labels=labels)
+test_columns = ['ALB', 'ALP', 'ALT', 'AST', 'BIL', 'CHE', 'CHOL', 'CREA', 'GGT', 'PROT']
+
+avg_by_age_group = data.groupby('AgeGroup', observed=True)[test_columns].mean().reset_index()
+print(avg_by_age_group)
+plt.figure(figsize=(14, 7))
+
+# Melt the dataframe so we can plot with seaborn
+melted_df = avg_by_age_group.melt(id_vars='AgeGroup', var_name='Test', value_name='Average Value')
+
+sns.lineplot(data=melted_df, x='AgeGroup', y='Average Value', hue='Test', marker='o')
+
+plt.title('Average Clinical Test Values Across Age Groups')
+plt.xlabel('Age Group')
+plt.ylabel('Average Test Value')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.grid(True)
+plt.show()
