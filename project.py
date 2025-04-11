@@ -1,120 +1,81 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-data=pd.read_excel("C:/Users/Sneha/Desktop/python_project2/hepatitisCdata.xlsx")
-print(data.info())
+import pandas as pd
+file_path="C:/Users/Sneha/Desktop/python project/retail_sales_dataset.xlsx"
+data = pd.read_excel(file_path, sheet_name='retail_sales_dataset')
+#print(data.head(5))
+data.info()
 print(data.describe())
-data.fillna(0, inplace=True)
-print(data.info())
-df=pd.DataFrame({'Age':data['Age'],'Albumin':data['ALB'],'Alkaline Phosphatase':data['ALP'],'Alanine Aminotransferase':data['ALT'],'Aspartate Aminotransferase':data['AST'],'Bilirubin':data['BIL'],'Cholinesterase':data['CHE'],'Cholesterol':data['CHOL'],'Creatinine':data['CREA'],'Gamma-Glutamyl Transferase':data['GGT'],'Total Protein':data['PROT']})  
-corr=df.corr()
+corr=data['Age'].corr(data['Total Amount'])
 print(corr)
+corr1=data['Age'].corr(data['Quantity'])
+print(corr1)
+#Objective 1->How does customer age and gender influence their purchasing behaviour?
+bins=[18,25,35,45,65,100]
+labels=["18-25","26-35","36-45","46-65","65+"]
+data["Age Group"] = pd.cut(data["Age"], bins=bins, labels=labels, right=False)
+age_gender_spending=data.groupby(['Age Group','Gender'],observed=True)['Total Amount'].mean()
+plt.figure(figsize=(8,6))
+sns.barplot(x=age_gender_spending.index.get_level_values(0),  
+            y=age_gender_spending.values, hue=age_gender_spending.index.get_level_values(1), 
+            palette="coolwarm",errorbar=None)
+plt.show()
+#Objective 2->Which product categories hold the highest appeal among customers?
+
+category_sales=data.groupby("Product Category")["Total Amount"].sum().reset_index()
+category_sales = category_sales.sort_values(by="Total Amount", ascending=False)
+plt.figure(figsize=(10, 6))
+sns.barplot(data=category_sales, x="Total Amount", y="Product Category",hue="Product Category", palette="viridis")
+plt.xlabel("Total Sales ($)")
+plt.ylabel("Product Category")
+plt.title("Top Selling Product Categories")
+#plt.grid(axis="x", linestyle="--", alpha=0.7)
+plt.show()
+
+#Objective 3-> What is the relationships between age,spending and product preferences?
+
 plt.figure(figsize=(10,6))
-sns.heatmap(corr,annot=True,cmap='coolwarm')
-plt.title("Correlation of all the blood test")
-plt.show()
-'''Objective 1->To find out which blood tests change the most as Hepatitis C becomes more serious,
-and how those test results look in patients with cirrhosis.'''
+sns.scatterplot(data=data, 
+                x="Age", 
+                y="Total Amount", 
+                hue="Product Category",   
+                size="Total Amount",  
+                sizes=(10, 300), 
+                alpha=0.7,  
+                palette="Set2")
 
-# Cleaning column names
-data.columns = data.columns.str.strip()
-
-# Print unique categories to see disease stages
-print("Disease categories:", data['Category'].unique())
-
-# Focus on main liver test results
-tests = ['ALT', 'AST', 'BIL']
-
-# Group by disease category and calculate mean values
-grouped_means = data.groupby('Category')[tests].mean()
-
-# Plot
-grouped_means.plot(kind='bar', figsize=(10,6))
-plt.title('Average ALT, AST, BIL Values by Disease Stage')
-plt.ylabel('Average Test Value')
-
-plt.grid(True)
-plt.tight_layout()
+plt.title("Relationship Between Age, Spending, and Product Preferences")
+plt.xlabel("Age")
+plt.ylabel("Total Spending ($)")
+plt.legend(title="Product Category", bbox_to_anchor=(1,1)) 
 plt.show()
 
-'''Objective 2->To compare blood test results between male and female patients and find out if gender has any effect on Hepatitis C.'''
-data = data.drop('Patient id', axis=1)
+#Objective 4-> : Analyze how shopping varies over time (daily, weekly, monthly),What are the peak shopping days of the week? (Do people shop more on weekends?)
 
-# Separate male and female patients and get average test values
-grouped_by_sex = data.groupby('Sex').mean(numeric_only=True)
 
-# Plotting
+# Ensure Date column is in datetime format
+data["Date"] = pd.to_datetime(data["Date"])
 
-grouped_by_sex.T.plot(kind='bar',figsize=(10,6), colormap='Pastel1')
-plt.title('Average Test Values by Gender')
-plt.ylabel('Average Value')
+# Aggregate sales data monthly
+monthly_sales = data.groupby(data["Date"].dt.to_period("M"))["Total Amount"].sum().reset_index()
+
+# Convert 'Date' period to string, then back to datetime (Seaborn needs datetime)
+monthly_sales["Date"] = monthly_sales["Date"].astype(str)  # Convert period to string
+monthly_sales["Date"] = pd.to_datetime(monthly_sales["Date"])  # Convert back to datetime
+
+# Plot the monthly trend
+plt.figure(figsize=(10,5))
+sns.lineplot(data=monthly_sales, x="Date", y="Total Amount", marker="o")
+plt.title("Monthly Shopping Trends")
 plt.xticks(rotation=45)
-plt.grid(True)
-plt.legend(title='Sex', labels=['Female', 'Male'])
-plt.tight_layout()
 plt.show()
-'''Objective 3-> "To find out if any patients have test results that are much higher or lower than others,
-and understand what that might say about their health condition'''
-test_columns = ['ALB', 'ALP', 'ALT', 'AST', 'BIL', 'CHE', 'CHOL', 'CREA', 'GGT', 'PROT']
 
-# Plot boxplots for each test
-plt.figure(figsize=(15, 8))
-sns.boxplot(data=data[test_columns], orient='h', palette='Set2')
-plt.title("Boxplot of Test Results to Detect Outliers")
-plt.xlabel("Value")
-plt.tight_layout()
-plt.show()
-'''Objective 4->To analyze how average clinical test values vary across different age groups and investigate
-whether older patients are more likely to show signs of abnormal liver function based on routine blood test results'''
-# Assuming 'data' is your cleaned DataFrame
-bins = [0, 30, 50, 70, 100]
-labels = ['Young (<30)', 'Middle (30-50)', 'Senior (50-70)', 'Elderly (70+)']
-data['AgeGroup'] = pd.cut(data['Age'], bins=bins, labels=labels)
-test_columns = ['ALB', 'ALP', 'ALT', 'AST', 'BIL', 'CHE', 'CHOL', 'CREA', 'GGT', 'PROT']
+#Objective 5-> : How does gender affect shopping trends?
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Gender', y='Total Amount', data=data
+            )
+plt.title("Customer Spending Behavior by Gender")
+plt.xlabel("Gender")
+plt.ylabel("Total Spending")
+plt.show()  
 
-avg_by_age_group = data.groupby('AgeGroup', observed=True)[test_columns].mean().reset_index()
-print(avg_by_age_group)
-plt.figure(figsize=(14, 7))
-
-# Melt the dataframe so we can plot with seaborn
-melted_df = avg_by_age_group.melt(id_vars='AgeGroup', var_name='Test', value_name='Average Value')
-
-sns.lineplot(data=melted_df, x='AgeGroup', y='Average Value', hue='Test', marker='o')
-
-plt.title('Average Clinical Test Values Across Age Groups')
-plt.xlabel('Age Group')
-plt.ylabel('Average Test Value')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.grid(True)
-plt.show()
-'''Objective 5->To compare the distribution of clinical test values and explore
-whether certain tests show more variability among patients.'''
-test_std = data[test_columns].std().sort_values(ascending=False)
-
-# Convert to a DataFrame for plotting
-std_df = test_std.reset_index()
-std_df.columns = ['Test', 'Standard Deviation']
-
-# Plot as bar chart
-plt.figure(figsize=(12, 6))
-sns.barplot(data=std_df, x='Test', y='Standard Deviation', hue='Test', palette='viridis', legend=False)
-plt.title('Variability of Clinical Test Results Among Patients')
-plt.ylabel('Standard Deviation')
-plt.xlabel('Clinical Test')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.grid(axis='y')
-plt.show()
-'''Objective 6->To understand the distribution of patients across different Hepatitis C disease stages or categories using a pie chart.'''
-category_counts = data['Category'].value_counts()
-
-# Plotting the pie chart
-plt.figure(figsize=(8, 8))
-plt.pie(category_counts, labels=category_counts.index, autopct='%1.1f%%', startangle=140, colors=plt.cm.Pastel1.colors)
-plt.title('Distribution of Patients Across Hepatitis C Stages')
-
-# Add legend (shows category names)
-plt.legend(category_counts.index, title="Disease Stage", loc="best")
-plt.axis('equal')  # To make the pie chart round
-plt.show()
