@@ -3,7 +3,7 @@ import seaborn as sns
 import pandas as pd
 file_path="C:/Users/Sneha/Desktop/python project/retail_sales_dataset.xlsx"
 data = pd.read_excel(file_path, sheet_name='retail_sales_dataset')
-#print(data.head(5))
+print(data.head(5))
 data.info()
 print(data.describe())
 corr=data['Age'].corr(data['Total Amount'])
