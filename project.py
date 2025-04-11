@@ -7,7 +7,7 @@ print(data.head(5))
 data.info()
 print(data.describe())
 corr=data['Age'].corr(data['Total Amount'])
-print(corr)
+print("COrrelation:",corr)
 corr1=data['Age'].corr(data['Quantity'])
 print(corr1)
 #Objective 1->How does customer age and gender influence their purchasing behaviour?
