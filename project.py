@@ -43,7 +43,7 @@ data = data.drop('Patient id', axis=1)
 # Separate male and female patients and get average test values
 grouped_by_sex = data.groupby('Sex').mean(numeric_only=True)
 
-# Plotting
+
 
 grouped_by_sex.T.plot(kind='bar',figsize=(10,6), colormap='Pastel1')
 plt.title('Average Test Values by Gender')
